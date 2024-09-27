@@ -1,14 +1,19 @@
 import { useGetTasksQuery, useUpdateTaskStatusMutation } from '@/state/api';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { DndProvider, DragSourceMonitor, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Task as TaskType } from '@/state/api';
 import { EllipsisVertical, MessageSquareMore, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { DropTargetMonitor } from 'react-dnd';
 
 type BoardProps = {
     id: string;
     setIsModalNewTaskOpen: (isOpen: boolean) => void;
+};
+
+type StatusColor = {
+    [key: string]: string;
 };
 
 const taskStatus = ['To Do', 'Work In Progress', 'Under Review', 'Completed'];
@@ -53,13 +58,13 @@ const TaskColumn = ({ status, tasks, moveTask, setIsModalNewTaskOpen }: TaskColu
     const [{ isOver }, drop] = useDrop(() => ({
         accept: 'task',
         drop: (item: { id: number }) => moveTask(item.id, status),
-        collect: (monitor: any) => ({
+        collect: (monitor: DropTargetMonitor) => ({
             isOver: !!monitor.isOver(),
         }),
     }));
     const tasksCount = tasks.filter((task) => task.status === status).length;
 
-    const statusColor: any = {
+    const statusColor: StatusColor = {
         'To Do': '#2563EB',
         'Work In Progress': '#059669',
         'Under Review': '#D97706',
@@ -118,7 +123,7 @@ const Task = ({ task }: TaskProps) => {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: 'task',
         item: { id: task.id },
-        collect: (monitor: any) => ({
+        collect: (monitor: DragSourceMonitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
     }));
