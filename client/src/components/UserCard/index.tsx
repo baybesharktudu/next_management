@@ -8,14 +8,14 @@ type Props = {
 
 const UserCard = ({ user }: Props) => {
     return (
-        <div className="flex items-center rounded border p-4 shadow">
+        <div className="flex items-center gap-2 rounded border p-4 shadow">
             {user.profilePictureUrl && (
                 <Image
-                    src={`/p1.jpeg`}
+                    src={`/${user.profilePictureUrl}`}
                     alt="profile picture"
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="h-[32px] rounded-full"
                 />
             )}
             <div>

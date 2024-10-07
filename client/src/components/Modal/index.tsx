@@ -2,16 +2,69 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Header from '../Header';
 import { X } from 'lucide-react';
+import { Priority, Status } from '@/state/api';
 
 type Props = {
+    setAssignedId?: (i: number | undefined) => void;
+    setTitle?: (i: string) => void;
+    setDescription?: (i: string) => void;
+    setStatus?: (i: Status) => void;
+    setPriority?: (i: Priority) => void;
+    setTags?: (i: string) => void;
+    setStartDate?: (i: string) => void;
+    setDueDate?: (i: string) => void;
+    setAuthorUserId?: (i: string) => void;
+    setAssignedUserId?: (i: string) => void;
     children: React.ReactNode;
     isOpen: boolean;
     onClose: () => void;
     name: string;
 };
 
-const Modal = ({ children, isOpen, onClose, name }: Props) => {
+const Modal = ({
+    setAssignedId,
+    setTitle,
+    setDescription,
+    setStatus,
+    setPriority,
+    setTags,
+    setStartDate,
+    setDueDate,
+    setAuthorUserId,
+    setAssignedUserId,
+    children,
+    isOpen,
+    onClose,
+    name,
+}: Props) => {
     if (!isOpen) return null;
+
+    const handleClose = () => {
+        onClose();
+        if (
+            setTitle &&
+            setDescription &&
+            setStatus &&
+            setPriority &&
+            setTags &&
+            setStartDate &&
+            setDueDate &&
+            setAuthorUserId &&
+            setAssignedUserId &&
+            setAssignedId
+        ) {
+            setAssignedId(undefined);
+            setTitle('');
+            setDescription('');
+            setStatus(Status.ToDo);
+            setPriority(Priority.Backlog);
+            setTags('');
+            setStartDate('');
+            setDueDate('');
+            setAuthorUserId('1');
+            setAssignedUserId('');
+        }
+    };
 
     return ReactDOM.createPortal(
         <div className="fixed inset-0 z-50 flex h-full w-full items-center justify-center overflow-y-auto bg-gray-600 bg-opacity-50 p-4">
@@ -21,7 +74,7 @@ const Modal = ({ children, isOpen, onClose, name }: Props) => {
                     buttonComponent={
                         <button
                             className="bg-blue-primary flex h-7 w-7 items-center justify-center rounded-full text-white hover:bg-blue-600"
-                            onClick={onClose}
+                            onClick={handleClose}
                         >
                             <X size={18} />
                         </button>

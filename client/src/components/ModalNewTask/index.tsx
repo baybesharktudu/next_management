@@ -1,7 +1,8 @@
 import Modal from '@/components/Modal';
-import { Priority, Status, useCreateTaskMutation } from '@/state/api';
-import React, { useState } from 'react';
+import { Priority, Status, useCreateTaskMutation, useGetUsersQuery, User } from '@/state/api';
+import React, { useEffect, useState } from 'react';
 import { formatISO } from 'date-fns';
+import { CalendarCheck, Check } from 'lucide-react';
 
 type Props = {
     isOpen: boolean;
@@ -10,6 +11,8 @@ type Props = {
 };
 
 const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
+    const { data: users, isLoading: loading, isError } = useGetUsersQuery();
+
     const [createTask, { isLoading }] = useCreateTaskMutation();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -18,9 +21,31 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
     const [tags, setTags] = useState('');
     const [startDate, setStartDate] = useState('');
     const [dueDate, setDueDate] = useState('');
-    const [authorUserId, setAuthorUserId] = useState('');
+    const [authorUserId, setAuthorUserId] = useState('1');
     const [assignedUserId, setAssignedUserId] = useState('');
     const [projectId, setProjectId] = useState('');
+
+    const [assignedId, setAssignedId] = useState<number | undefined>();
+    const [listUsername, setListUsername] = useState<User[]>();
+    useEffect(() => {
+        if (assignedUserId.length > 2) {
+            const listuser = users?.filter((user) => {
+                if (
+                    user.username.toLowerCase().includes(assignedUserId.toLowerCase()) &&
+                    user.teamId === 1
+                ) {
+                    setAssignedId(user.userId);
+                    return user.username.toLowerCase().includes(assignedUserId.toLowerCase());
+                }
+            });
+            setListUsername(listuser);
+        } else {
+            setListUsername([]);
+            setAssignedId(undefined);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [assignedUserId]);
+    console.log(assignedId);
 
     const handleSubmit = async () => {
         if (!title || !authorUserId || !(id !== null || projectId)) return;
@@ -41,13 +66,34 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
             startDate: formattedStartDate,
             dueDate: formattedDueDate,
             authorUserId: parseInt(authorUserId),
-            assignedUserId: parseInt(assignedUserId),
+            assignedUserId: assignedId,
             projectId: id !== null ? Number(id) : Number(projectId),
         });
+
+        setTitle('');
+        setDescription('');
+        setStatus(Status.ToDo);
+        setPriority(Priority.Backlog);
+        setTags('');
+        setStartDate('');
+        setDueDate('');
+        setAuthorUserId('1');
+        setAssignedUserId('');
+        setAssignedId(undefined);
     };
 
     const isFormValid = () => {
-        return title && authorUserId;
+        return (
+            title &&
+            description &&
+            status &&
+            priority &&
+            tags &&
+            startDate &&
+            dueDate &&
+            authorUserId &&
+            assignedUserId
+        );
     };
 
     const selectStyles =
@@ -57,12 +103,27 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
         'w-full rounded border border-gray-300 p-2 shadow-sm dark:border-dark-tertiary dark:bg-dark-tertiary dark:text-white dark:focus:outline-none';
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} name="Create New Task">
+        <Modal
+            setAssignedId={setAssignedId}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            setStatus={setStatus}
+            setPriority={setPriority}
+            setTags={setTags}
+            setStartDate={setStartDate}
+            setDueDate={setDueDate}
+            setAuthorUserId={setAuthorUserId}
+            setAssignedUserId={setAssignedUserId}
+            isOpen={isOpen}
+            onClose={onClose}
+            name="Create New Task"
+        >
             <form
                 className="mt-4 space-y-6"
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSubmit();
+                    onClose();
                 }}
             >
                 <input
@@ -82,7 +143,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                     <select
                         className={selectStyles}
                         value={status}
-                        onChange={(e) => setStatus(Status[e.target.value as keyof typeof Status])}
+                        onChange={(e) => setStatus(e.target.value as Status)}
                     >
                         <option value="">Select Status</option>
                         <option value={Status.ToDo}>To Do</option>
@@ -129,18 +190,34 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                 </div>
                 <input
                     type="text"
-                    className={inputStyles}
+                    className={`${inputStyles} text-sky-500`}
                     placeholder="Author User ID"
-                    value={authorUserId}
+                    value={`${authorUserId === '1' && 'Phan Ba Du'}`}
                     onChange={(e) => setAuthorUserId(e.target.value)}
+                    disabled={true}
                 />
                 <input
                     type="text"
                     className={inputStyles}
                     placeholder="Assigned User ID"
-                    value={assignedUserId}
                     onChange={(e) => setAssignedUserId(e.target.value)}
                 />
+                {listUsername?.length !== 0 && (
+                    <div>
+                        <h1 className="font-semibold underline">List of job recipients: </h1>
+                        {listUsername?.map((user) => (
+                            <ul className="pl-5" key={user.userId}>
+                                <li className="flex items-center gap-3 text-sky-500">
+                                    {user.username}
+                                    <Check className="h-5 w-5" />
+                                </li>
+                            </ul>
+                        ))}
+                    </div>
+                )}
+                {listUsername?.length === 0 && assignedUserId.length > 3 && (
+                    <h1 className="text-red-500">This person was not found in the team.</h1>
+                )}
                 {id === null && (
                     <input
                         type="text"

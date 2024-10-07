@@ -20,7 +20,6 @@ const taskStatus = ['To Do', 'Work In Progress', 'Under Review', 'Completed'];
 
 const BoardView = ({ id, setIsModalNewTaskOpen }: BoardProps) => {
     const { data: tasks, isLoading, error } = useGetTasksQuery({ projectId: Number(id) });
-
     const [updateTaskStatus] = useUpdateTaskStatusMutation();
 
     const moveTask = (taskId: number, toStatus: string) => {
@@ -62,6 +61,7 @@ const TaskColumn = ({ status, tasks, moveTask, setIsModalNewTaskOpen }: TaskColu
             isOver: !!monitor.isOver(),
         }),
     }));
+
     const tasksCount = tasks.filter((task) => task.status === status).length;
 
     const statusColor: StatusColor = {
@@ -162,15 +162,13 @@ const Task = ({ task }: TaskProps) => {
                 isDragging ? 'opacity-50' : 'opacity-100'
             }`}
         >
-            {task.attachments && task.attachments.length > 0 && (
-                <Image
-                    src={`/${task.attachments[0].fileURL}`}
-                    alt={task.attachments[0].fileName}
-                    width={400}
-                    height={200}
-                    className="h-auto w-full rounded-t-md"
-                />
-            )}
+            <Image
+                src={`/bugs.jpg`}
+                alt={'iamge test'}
+                width={400}
+                height={200}
+                className="h-[200px] w-full rounded-t-md object-contain"
+            />
             <div className="p-4 md:p-6">
                 <div className="flex items-start justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-2">
@@ -181,7 +179,6 @@ const Task = ({ task }: TaskProps) => {
                                     key={tag}
                                     className="rounded-full bg-blue-100 px-2 py-1 text-xs"
                                 >
-                                    {' '}
                                     {tag}
                                 </div>
                             ))}
@@ -210,7 +207,7 @@ const Task = ({ task }: TaskProps) => {
 
                 {/* Users */}
                 <div className="mt-3 flex items-center justify-between">
-                    <div className="flex -space-x-[6px] overflow-hidden">
+                    <div className="flex items-center gap-5 -space-x-[6px] overflow-hidden">
                         {task.assignee && (
                             <Image
                                 key={task.assignee.userId}
@@ -221,15 +218,8 @@ const Task = ({ task }: TaskProps) => {
                                 className="dark:border-dark-secondary h-8 w-8 rounded-full border-2 border-white object-cover"
                             />
                         )}
-                        {task.author && (
-                            <Image
-                                key={task.author.userId}
-                                src={`/${task.author.profilePictureUrl!}`}
-                                alt={task.author.username}
-                                width={30}
-                                height={30}
-                                className="dark:border-dark-secondary h-8 w-8 rounded-full border-2 border-white object-cover"
-                            />
+                        {task.assignee?.username && (
+                            <span className="text-sm text-sky-500">{task.assignee?.username}</span>
                         )}
                     </div>
                     <div className="flex items-center text-gray-500 dark:text-neutral-500">
