@@ -2,7 +2,7 @@ import Modal from '@/components/Modal';
 import { Priority, Status, useCreateTaskMutation, useGetUsersQuery, User } from '@/state/api';
 import React, { useEffect, useState } from 'react';
 import { formatISO } from 'date-fns';
-import { CalendarCheck, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 type Props = {
     isOpen: boolean;
@@ -11,7 +11,7 @@ type Props = {
 };
 
 const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
-    const { data: users, isLoading: loading, isError } = useGetUsersQuery();
+    const { data: users } = useGetUsersQuery();
 
     const [createTask, { isLoading }] = useCreateTaskMutation();
     const [title, setTitle] = useState('');
