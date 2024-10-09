@@ -5,6 +5,9 @@ import { X } from 'lucide-react';
 import { Priority, Status } from '@/state/api';
 
 type Props = {
+    setEndDate?: (i: string) => void;
+    setProjectName?: (i: string) => void;
+    setResError?: (i: undefined) => void;
     setAssignedId?: (i: number | undefined) => void;
     setTitle?: (i: string) => void;
     setDescription?: (i: string) => void;
@@ -22,6 +25,9 @@ type Props = {
 };
 
 const Modal = ({
+    setEndDate,
+    setProjectName,
+    setResError,
     setAssignedId,
     setTitle,
     setDescription,
@@ -40,7 +46,6 @@ const Modal = ({
     if (!isOpen) return null;
 
     const handleClose = () => {
-        onClose();
         if (
             setTitle &&
             setDescription &&
@@ -51,7 +56,8 @@ const Modal = ({
             setDueDate &&
             setAuthorUserId &&
             setAssignedUserId &&
-            setAssignedId
+            setAssignedId &&
+            setResError
         ) {
             setAssignedId(undefined);
             setTitle('');
@@ -63,7 +69,19 @@ const Modal = ({
             setDueDate('');
             setAuthorUserId('1');
             setAssignedUserId('');
+            setResError(undefined);
         }
+        console.log(setResError);
+        if (setProjectName && setDescription && setStartDate && setEndDate && setResError) {
+            setProjectName('');
+            setDescription('');
+            setStartDate('');
+            setEndDate('');
+            setResError(undefined);
+            console.log('object');
+        }
+
+        onClose();
     };
 
     return ReactDOM.createPortal(

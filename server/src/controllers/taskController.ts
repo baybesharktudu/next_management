@@ -35,11 +35,26 @@ export const createTask = async (
       tags,
       startDate,
       dueDate,
-      points,
       projectId,
       authorUserId,
       assignedUserId,
     } = req.body;
+
+    if (title.length < 4 || description.length < 4 || tags.length < 4) {
+        res.status(403).json({ message: "Please enter all information with length > 3" })
+        return;
+    }
+
+    if (!status || !priority || !projectId || !authorUserId || !assignedUserId || !assignedUserId) {
+        res.status(403).json({ message: "Please do not leave fields blank" })
+        return;
+    }
+
+    if (startDate > dueDate) {
+        res.status(403).json({ message: "Start date must be less than deadline" })
+        return;
+    }
+    
     try {
         const newTask = await prisma.task.create({
             data: {
@@ -50,7 +65,6 @@ export const createTask = async (
                 tags,
                 startDate,
                 dueDate,
-                points,
                 projectId,
                 authorUserId,
                 assignedUserId,

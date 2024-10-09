@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 export const search = async (req: Request, res: Response): Promise<void> => {
     const { query } = req.query;
+
     try {
         const tasks = await prisma.task.findMany({
             where: {

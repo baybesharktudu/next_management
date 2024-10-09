@@ -10,6 +10,10 @@ type Props = {
     id?: string | null;
 };
 
+type Error = {
+    message: string;
+};
+
 const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
     const { data: users } = useGetUsersQuery();
 
@@ -27,17 +31,24 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
 
     const [assignedId, setAssignedId] = useState<number | undefined>();
     const [listUsername, setListUsername] = useState<User[]>();
+
+    const [resError, setResError] = useState<Error>();
+
     useEffect(() => {
         if (assignedUserId.length > 2) {
             const listuser = users?.filter((user) => {
-                if (
+                return (
                     user.username.toLowerCase().includes(assignedUserId.toLowerCase()) &&
                     user.teamId === 1
-                ) {
-                    setAssignedId(user.userId);
-                    return user.username.toLowerCase().includes(assignedUserId.toLowerCase());
-                }
+                );
             });
+
+            if (listuser && listuser.length > 0) {
+                setAssignedId(listuser[0].userId);
+            } else {
+                setAssignedId(undefined);
+            }
+
             setListUsername(listuser);
         } else {
             setListUsername([]);
@@ -45,11 +56,9 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [assignedUserId]);
-    console.log(assignedId);
 
     const handleSubmit = async () => {
-        if (!title || !authorUserId || !(id !== null || projectId)) return;
-
+        // [FORMAT DATE]
         const formattedStartDate = formatISO(new Date(startDate), {
             representation: 'complete',
         });
@@ -57,31 +66,50 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
             representation: 'complete',
         });
 
-        await createTask({
-            title,
-            description,
-            status,
-            priority,
-            tags,
-            startDate: formattedStartDate,
-            dueDate: formattedDueDate,
-            authorUserId: parseInt(authorUserId),
-            assignedUserId: assignedId,
-            projectId: id !== null ? Number(id) : Number(projectId),
-        });
+        try {
+            // [NEW TASK]
+            const result = await createTask({
+                title,
+                description,
+                status,
+                priority,
+                tags,
+                startDate: formattedStartDate,
+                dueDate: formattedDueDate,
+                authorUserId: parseInt(authorUserId),
+                assignedUserId: assignedId,
+                projectId: id !== null ? Number(id) : Number(projectId),
+            });
 
-        setTitle('');
-        setDescription('');
-        setStatus(Status.ToDo);
-        setPriority(Priority.Backlog);
-        setTags('');
-        setStartDate('');
-        setDueDate('');
-        setAuthorUserId('1');
-        setAssignedUserId('');
-        setAssignedId(undefined);
+            if (result.error) {
+                if ('data' in result.error) {
+                    const errorData = result.error.data as Error;
+                    setResError({ message: errorData.message });
+                    return;
+                }
+            }
+
+            if (result.data) {
+                onClose();
+                // [REFRESH INPUT]
+                setTitle('');
+                setDescription('');
+                setStatus(Status.ToDo);
+                setPriority(Priority.Backlog);
+                setTags('');
+                setStartDate('');
+                setDueDate('');
+                setAuthorUserId('1');
+                setAssignedUserId('');
+                setAssignedId(undefined);
+                setResError(undefined);
+            }
+        } catch (error) {
+            console.log(error);
+        }
     };
 
+    // [CHECK INPUT]
     const isFormValid = () => {
         return (
             title &&
@@ -92,7 +120,8 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
             startDate &&
             dueDate &&
             authorUserId &&
-            assignedUserId
+            assignedUserId &&
+            assignedId
         );
     };
 
@@ -104,6 +133,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
 
     return (
         <Modal
+            setResError={setResError}
             setAssignedId={setAssignedId}
             setTitle={setTitle}
             setDescription={setDescription}
@@ -123,7 +153,6 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSubmit();
-                    onClose();
                 }}
             >
                 <input
@@ -145,7 +174,6 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                         value={status}
                         onChange={(e) => setStatus(e.target.value as Status)}
                     >
-                        <option value="">Select Status</option>
                         <option value={Status.ToDo}>To Do</option>
                         <option value={Status.WorkInProgress}>Work In Progress</option>
                         <option value={Status.UnderReview}>Under Review</option>
@@ -158,7 +186,6 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                             setPriority(Priority[e.target.value as keyof typeof Priority])
                         }
                     >
-                        <option value="">Select Priority</option>
                         <option value={Priority.Urgent}>Urgent</option>
                         <option value={Priority.High}>High</option>
                         <option value={Priority.Medium}>Medium</option>
@@ -204,7 +231,13 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                 />
                 {listUsername?.length !== 0 && (
                     <div>
-                        <h1 className="font-semibold underline">List of job recipients: </h1>
+                        <div className="flex gap-2">
+                            <h1 className="font-semibold underline">List of job recipients:</h1>
+                            <span className="no-underlin1 flex gap-1">
+                                only assign work to <p className="font-semibold underline">one</p>{' '}
+                                person
+                            </span>
+                        </div>
                         {listUsername?.map((user) => (
                             <ul className="pl-5" key={user.userId}>
                                 <li className="flex items-center gap-3 text-sky-500">
@@ -218,6 +251,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
                 {listUsername?.length === 0 && assignedUserId.length > 3 && (
                     <h1 className="text-red-500">This person was not found in the team.</h1>
                 )}
+                {resError && <h1 className="text-red-500">{resError.message}</h1>}
                 {id === null && (
                     <input
                         type="text"

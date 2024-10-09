@@ -23,11 +23,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 // ROUTE
-app.use("/projects", projectRoutes);
-app.use("/tasks", taskRoutes);
-app.use("/search", searchRoutes);
-app.use("/users", userRoutes);
-app.use("/teams", teamRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/teams", teamRoutes);
 
 // SERVER
 const port = Number(process.env.PORT) || 3000;
